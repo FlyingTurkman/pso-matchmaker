@@ -22,6 +22,8 @@ interface RegionData {
     readonly moderationChannelId?: string
     readonly bansListChannelId?: string
     readonly matchResultsChannelId?: string
+    readonly announcementsChannelId?: string
+    readonly seasonWinnerRoleId?: string
     readonly tier1RoleId?: string
     readonly tier2RoleId?: string
     readonly tier2Threshold?: number
@@ -43,11 +45,13 @@ class RegionService {
                 moderationChannelId: process.env[`PSO_${key}_DISCORD_MODERATION_CHANNEL_ID`] as string,
                 bansListChannelId: process.env[`PSO_${key}_DISCORD_BANS_LIST_CHANNEL_ID`] as string,
                 matchResultsChannelId: process.env[`PSO_${key}_DISCORD_MATCH_RESULTS_CHANNEL_ID`] as string,
+                announcementsChannelId: process.env[`PSO_${key}_DISCORD_ANNOUNCEMENTS_CHANNEL_ID`] as string,
+                seasonWinnerRoleId: process.env[`PSO_${key}_DISCORD_SEASON_WINNER_ROLE_ID`] as string,
                 tier1RoleId: process.env[`PSO_${key}_DISCORD_TIER_1_ROLE_ID`] as string,
                 tier2RoleId: process.env[`PSO_${key}_DISCORD_TIER_2_ROLE_ID`] as string,
                 tier2Threshold: parseInt(process.env[`PSO_${key}_DISCORD_TIER_2_THRESHOLD`] as string),
                 tier3RoleId: process.env[`PSO_${key}_DISCORD_TIER_3_ROLE_ID`] as string,
-                tier3Threshold: parseInt(process.env[`PSO_${key}_DISCORD_TIER_3_THRESHOLD`] as string),
+                tier3Threshold: parseInt(process.env[`PSO_${key}_DISCORD_TIER_3_THRESHOLD`] as string)
             } as RegionData
             this.regionsDataByRegion.set(key, regionData)
             this.regionsDataByGuildId.set(regionData.guildId, regionData)
@@ -143,12 +147,22 @@ class RegionService {
         ]
     }
 
-    async sendToModerationChannel(client: Client, region: Region, BaseMessageOptions: BaseMessageOptions) {
+    async sendToModerationChannel(client: Client, region: Region, messageOptions: BaseMessageOptions) {
         const regionData = this.getRegionData(region)
         if (regionData.moderationChannelId) {
             const [channel] = await handle(client.channels.fetch(regionData.moderationChannelId))
             if (channel instanceof TextChannel) {
-                await channel.send(BaseMessageOptions)
+                await channel.send(messageOptions)
+            }
+        }
+    }
+
+    async sendToAnnouncementsChannel(client: Client, region: Region, messageOptions: BaseMessageOptions) {
+        const regionData = this.getRegionData(region)
+        if (regionData.announcementsChannelId) {
+            const [channel] = await handle(client.channels.fetch(regionData.announcementsChannelId))
+            if (channel instanceof TextChannel) {
+                await channel.send(messageOptions)
             }
         }
     }
@@ -192,6 +206,10 @@ class RegionService {
         }
     }
 
+    areTierRoleIdsDefined(regionData: RegionData) {
+        return regionData.tier1RoleId && regionData.tier2RoleId && regionData.tier2Threshold
+    }
+
     private getAllActivityRolesId(): string[] {
         return [
             process.env.PSO_EU_DISCORD_VETERAN_ROLE_ID as string,
@@ -199,10 +217,6 @@ class RegionService {
             process.env.PSO_EU_DISCORD_REGULAR_ROLE_ID as string,
             process.env.PSO_EU_DISCORD_CASUAL_ROLE_ID as string
         ]
-    }
-
-    private areTierRoleIdsDefined(regionData: RegionData) {
-        return regionData.tier1RoleId && regionData.tier2RoleId && regionData.tier2Threshold
     }
 }
 

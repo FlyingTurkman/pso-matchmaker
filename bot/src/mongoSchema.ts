@@ -640,11 +640,17 @@ playerStatsSchema.index({ region: 1 });
 export const PlayerStats = model<IPlayerStats>('PlayerStats', playerStatsSchema, 'player-stats')
 
 export interface ITeamStats extends IStats {
-    guildId: string
+    guildId: string,
+    teamType: TeamType
 }
 const teamStatsSchema = new Schema<ITeamStats>({
     guildId: {
         type: String,
+        required: true
+    },
+    teamType: {
+        type: Number,
+        enum: TeamType,
         required: true
     },
     region: {
@@ -692,12 +698,15 @@ teamStatsSchema.index({ guildId: 1 });
 export const TeamStats = model<ITeamStats>('TeamStats', teamStatsSchema, 'team-stats')
 
 export interface IBan {
-    userId: string,
-    guildId: string,
+    guildId: string
     reason: string,
     expireAt: Date | null
 }
-const bansSchema = new Schema<IBan>({
+
+export interface IPlayerBan extends IBan {
+    userId: string
+}
+const playerBansSchema = new Schema<IPlayerBan>({
     userId: {
         type: String,
         required: true
@@ -715,6 +724,32 @@ const bansSchema = new Schema<IBan>({
         required: false
     }
 })
-bansSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
-bansSchema.index({ userId: 1, guildId: 1 });
-export const Bans = model<IBan>('Bans', bansSchema, 'bans')
+playerBansSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
+playerBansSchema.index({ userId: 1, guildId: 1 });
+export const PlayerBans = model<IPlayerBan>('PlayerBans', playerBansSchema, 'player-bans')
+
+export interface ITeamBan extends IBan {
+    region: Region
+}
+const teamBansSchema = new Schema<ITeamBan>({
+    region: {
+        type: String,
+        enum: Region,
+        required: true
+    },
+    guildId: {
+        type: String,
+        required: true
+    },
+    reason: {
+        type: String,
+        required: false
+    },
+    expireAt: {
+        type: Date,
+        required: false
+    }
+})
+teamBansSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
+teamBansSchema.index({ guildId: 1 });
+export const TeamBans = model<ITeamBan>('TeamBans', teamBansSchema, 'team-bans')

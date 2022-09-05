@@ -2,7 +2,7 @@ import { BaseGuildTextChannel, Client, EmbedBuilder, GuildMember, BaseMessageOpt
 import { DeleteResult } from "mongodb";
 import { UpdateWriteOpResult } from "mongoose";
 import { MAX_LINEUP_NAME_LENGTH, MAX_TEAM_CODE_LENGTH, MAX_TEAM_NAME_LENGTH } from "../constants";
-import { Bans, IBan, ILineup, IRole, IRoleBench, IPlayerStats, ITeam, IUser, Lineup, LineupQueue, Team, TeamStats, ITeamStats } from "../mongoSchema";
+import { PlayerBans, IPlayerBan, ILineup, IRole, IRoleBench, IPlayerStats, ITeam, IUser, Lineup, LineupQueue, Team, TeamStats, ITeamStats, TeamBans, ITeamBan } from "../mongoSchema";
 import { getEmojis, handle } from "../utils";
 import { interactionUtils } from "./interactionUtils";
 import { matchmakingService } from "./matchmakingService";
@@ -621,20 +621,28 @@ class TeamService {
         return Lineup.updateOne({ channelId }, { 'lastNotificationTime': time })
     }
 
+    async deleteTeamBan(guildId: string): Promise<DeleteResult> {
+        return TeamBans.deleteOne({ guildId })
+    }
+
+    async findTeamBansByRegion(region: Region): Promise<ITeamBan[]> {
+        return TeamBans.find({ region })
+    }
+
     async deleteBansByGuildId(guildId: string): Promise<DeleteResult> {
-        return Bans.deleteMany({ guildId })
+        return PlayerBans.deleteMany({ guildId })
     }
 
     async deleteBanByUserIdAndGuildId(userId: string, guildId: string): Promise<DeleteResult> {
-        return Bans.deleteOne({ userId, guildId })
+        return PlayerBans.deleteOne({ userId, guildId })
     }
 
-    async findBanByUserIdAndGuildId(userId: string, guildId: string): Promise<IBan | null> {
-        return Bans.findOne({ userId, guildId })
+    async findBanByUserIdAndGuildId(userId: string, guildId: string): Promise<IPlayerBan | null> {
+        return PlayerBans.findOne({ userId, guildId })
     }
 
-    async findBansByGuildId(guildId: string): Promise<IBan[]> {
-        return Bans.find({ guildId })
+    async findPlayerBansByGuildId(guildId: string): Promise<IPlayerBan[]> {
+        return PlayerBans.find({ guildId })
     }
 
     getBenchUserToTransfer(lineup: ILineup, roleLeft?: IRole): IUser | null {

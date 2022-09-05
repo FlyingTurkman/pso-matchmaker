@@ -7,7 +7,7 @@ import { teamService } from "../../services/teamService";
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('unban')
+        .setName('player_unban')
         .setDescription('Unban a player from using the bot in this team')
         .addUserOption(option => option.setName('player')
             .setRequired(true)

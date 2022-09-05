@@ -7,7 +7,7 @@ import { teamService } from "../../services/teamService";
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('bans')
+        .setName('player_bans')
         .setDescription('Display a list of banned players'),
     authorizedRoles: [BOT_ADMIN_ROLE],
     async execute(interaction: ChatInputCommandInteraction) {
@@ -17,7 +17,7 @@ export default {
             return
         }
 
-        const banListEmbed = await interactionUtils.createBanListEmbed(interaction.client, interaction.guildId!)
+        const banListEmbed = await interactionUtils.createPlayerBanListEmbed(interaction.client, interaction.guildId!)
 
         await interaction.reply({ embeds: [banListEmbed], ephemeral: true })
     }

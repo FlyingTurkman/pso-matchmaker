@@ -1,13 +1,13 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BOT_ADMIN_ROLE } from "../../constants";
 import { ICommandHandler } from "../../handlers/commandHandler";
-import { Bans } from "../../mongoSchema";
+import { PlayerBans } from "../../mongoSchema";
 import { interactionUtils } from "../../services/interactionUtils";
 import { teamService } from "../../services/teamService";
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('ban')
+        .setName('player_ban')
         .setDescription('Ban a player from using the bot in this team')
         .addUserOption(option => option.setName('player')
             .setRequired(true)
@@ -26,7 +26,7 @@ export default {
             return
         }
 
-        const duration = interaction.options.getInteger('duration') || -1
+        const duration = interaction.options.getInteger('duration') || 1
         if (duration != null && (duration != -1 && duration < 1)) {
             await interaction.reply({ content: `⛔ Please chose a duration of either -1 or greater than 0`, ephemeral: true })
             return
@@ -50,7 +50,7 @@ export default {
         } else if (duration != -1) {
             expireAt = now + 24 * 60 * 60 * 1000
         }
-        await Bans.updateOne({ userId: player.id, guildId: team.guildId }, { userId: player.id, reason, expireAt }, { upsert: true })
+        await PlayerBans.updateOne({ userId: player.id, guildId: team.guildId }, { userId: player.id, reason, expireAt }, { upsert: true })
 
         let formattedDate
         if (expireAt) {

@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Client, CommandInteraction, EmbedBuilder, Interaction, InteractionReplyOptions, Message, BaseMessageOptions, SelectMenuBuilder, SelectMenuInteraction, TextChannel, User } from "discord.js";
+import { ActionRowBuilder, BaseMessageOptions, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelType, Client, CommandInteraction, EmbedBuilder, Interaction, InteractionReplyOptions, Message, SelectMenuBuilder, SelectMenuInteraction, TextChannel, User } from "discord.js";
 import { DeleteResult } from "mongodb";
 import { UpdateWriteOpResult } from "mongoose";
 import { Elo } from "simple-elo-rating";
@@ -9,7 +9,7 @@ import { handle, notEmpty } from "../utils";
 import { interactionUtils } from "./interactionUtils";
 import { Region, regionService } from "./regionService";
 import { statsService } from "./statsService";
-import { GK, LINEUP_TYPE_CAPTAINS, LINEUP_TYPE_MIX, LINEUP_TYPE_TEAM, LINEUP_VISIBILITY_PUBLIC, LINEUP_VISIBILITY_TEAM, RankedStats, ROLE_GOAL_KEEPER, TeamLogoDisplay, teamService } from "./teamService";
+import { LINEUP_TYPE_CAPTAINS, LINEUP_TYPE_MIX, LINEUP_TYPE_TEAM, LINEUP_VISIBILITY_PUBLIC, LINEUP_VISIBILITY_TEAM, RankedStats, TeamLogoDisplay, teamService } from "./teamService";
 const ZScore = require("math-z-score");
 
 export enum MatchResult {
@@ -87,7 +87,7 @@ class MatchmakingService {
     async updateBansListChannel(client: Client): Promise<void> {
         regionService.getAllRegionsData().forEach(async (regionData) => {
             if (regionData.bansListChannelId) {
-                const banListEmbed = await interactionUtils.createBanListEmbed(client, regionData.guildId)
+                const banListEmbed = await interactionUtils.createPlayerBanListEmbed(client, regionData.guildId)
                 const channel = await client.channels.fetch(regionData.bansListChannelId) as TextChannel
                 const messages = await channel.messages.fetch({ limit: 1 })
                 if (messages.size === 0) {
@@ -125,14 +125,14 @@ class MatchmakingService {
                 ranked: lineupQueue.ranked,
                 challengeId: null
             }
-            if (!lineupQueue.lineup.hasSignedRole(GK.name)) {
-                match['lineup.roles'] = {
-                    $elemMatch: {
-                        type: ROLE_GOAL_KEEPER,
-                        user: { $ne: null }
-                    }
-                }
-            }
+            // if (!lineupQueue.lineup.hasSignedRole(GK.name)) {
+            //     match['lineup.roles'] = {
+            //         $elemMatch: {
+            //             type: ROLE_GOAL_KEEPER,
+            //             user: { $ne: null }
+            //         }
+            //     }
+            // }
             const lineupQueueToChallenge = await LineupQueue.aggregate([
                 {
                     $match: match
@@ -1080,7 +1080,7 @@ class MatchmakingService {
 
     private async enhanceWithDiscordUsers(client: Client, roles: IRole[]): Promise<RoleWithDiscordUser[]> {
         const promises = roles.map(async role => {
-            if (!role.user || role.user.isMerc()) {
+            if (!role.user || role.user?.isMerc()) {
                 return { role }
             }
 
